@@ -13,33 +13,51 @@ Studi oleh Pumma dkk.(2019) menunjukkan bahwa operasi \textit{Input/Output} (I/O
 
 Kondisi ini menyoroti kebutuhan mendesak akan pengembangan sistem \textit{cache} maupun \textit{prefetcher} yang lebih adaptif dan selaras dengan karakteristik beban kerja pembelajaran mendalam. Namun, pengembangan tersebut saat ini terkendala oleh ketiadaan \textit{dataset trace} I/O yang merekam pola akses data riil pada skenario pelatihan pembelajaran mendalam. Tanpa data tersebut, sulit untuk merancang, menguji, dan membandingkan efektivitas berbagai strategi \textit{caching} dan \textit{prefetching}. Oleh karena itu, tugas akhir ini berfokus pada pengembangan \textit{dataset trace} I/O pada NFS, yang dikumpulkan dari skenario pelatihan pembelajaran mendalam menggunakan berbagai strategi \textit{shuffling}. \textit{Dataset} ini harapannya dapat menjadi fondasi bagi penelitian dan pengembangan \textit{cache} maupun \textit{prefetcher} yang lebih cerdas dan efisien di masa depan.
 
-Latar Belakang berisi dasar pemikiran, kebutuhan atau alasan yang menjadi ide dari topik tugas akhir.Tujuan utamanya adalah untuk memberikan informasi secukupnya kepada pembaca agar memahami topik yang akan dibahas.  Saat menuliskan bagian ini, posisikan anda sebagai pembaca – apakah anda tertarik untuk terus membaca?
-
 \section{Rumusan Masalah}
 
-Rumusan Masalah berisi masalah utama yang dibahas dalam tugas akhir. Rumusan masalah yang baik memiliki struktur sebagai berikut:
+Rumusan masalah yang hendak dijawab pada tugas akhir ini adalah:
 
 \begin{enumerate}
-    \item Penjelasan ringkas tentang kondisi/situasi yang ada sekarang terkait dengan topik utama yang dibahas Tugas Akhir.
-    \item Pokok persoalan dari kondisi/situasi yang ada, dapat dilihat dari kelemahan atau kekurangannya. \textbf{Bagian ini merupakan inti dari rumusan masalah}.
-    \item Elaborasi lebih lanjut yang menekankan pentingnya untuk menyelesaikan pokok persoalan tersebut.
-    \item Usulan singkat terkait dengan solusi yang ditawarkan untuk menyelesaikan persoalan.
+    \item Bagaimana format dan struktur \textit{dataset trace} yang dikembangkan?
+    \item Bagaimana cara merekam aktivitas I/O di tingkat NFS?
+    \item Apa karakteristik pola akses I/O pada beban kerja pelatihan mendalam dengan berbagai strategi \textit{shuffling}?
 \end{enumerate}
-
-Penting untuk diperhatikan bahwa persoalan yang dideskripsikan pada subbab ini akan dipertanggungjawabkan di bab Evaluasi apakah terselesaikan atau tidak.
 
 \section{Tujuan}
 
-Tuliskan tujuan utama dan/atau tujuan detil yang akan dicapai dalam pelaksanaan tugas akhir. Fokuskan pada hasil akhir yang ingin diperoleh setelah tugas akhir diselesaikan, terkait dengan penyelesaian persoalan pada rumusan masalah. Penting untuk diperhatikan bahwa tujuan yang dideskripsikan pada subbab ini akan dipertanggungjawabkan di akhir pelaksanaan tugas akhir apakah tercapai atau tidak.
+Tujuan dari tugas akhir ini adalah:
+
+\begin{enumerate}
+    \item Mengembangkan \textit{dataset trace} I/O NFS yang merekam pola akses data pada skenario pelatihan pembelajaran mendalam
+    \item Merancang format dan struktur \textit{dataset trace} I/O yang informatif, terstandarisasi, dan dapat digunakan oleh peneliti untuk mengevaluasi dan mengembangan strategi \textit{caching} dan \textit{prefetching}
+    \item Mengembangkan dan mengimplementasikan metode \textit{tracing} aktivitas I/O di tingkat NFS
+    \item Menganalisis dan membandingkan karakteristik pola akses I/O yang dihasilkan dari pelatihan pembelajaran mendalam dengan menerapkan berbagai strategi \textit{shuffling}, yaitu \textit{global shuffling}, \textit{buffered shuffling}, dan \textit {bundle shuffling}
+\end{enumerate}
 
 \section{Batasan Masalah}
 
-Tuliskan batasan-batasan yang diambil dalam pelaksanaan tugas akhir. Batasan ini dapat dihindari (tidak perlu ada) jika topik/judul tugas akhir dibuat cukup spesifik.
+Batasan masalah pada tugas akhir ini adalah:
+
+\begin{enumerate}
+    \item Fokus pada pelatihan pembelajaran mendalam menggunakan \textit{dataset} gambar, khususnya pada \textit{dataset} FireRisk
+    \item Pengumpulan \textit{dataset trace} I/O hanyya dilakukan pada proses pelatihan satu klien saja, tidak pada skenario pelatihan terdistribusi
+    \item Tidak mencakup pengembangan atau evaluasi strategi \textit{caching} dan \textit{prefetching} yang lebih kompleks, fokus pada pengumpulan data dan analisis pola akses I/O
+\end{enumerate}
+
 
 \section{Metodologi}
 
-Tuliskan semua tahapan yang akan dilalui selama pelaksanaan tugas akhir. Tahapan ini spesifik untuk menyelesaikan persoalan tugas akhir. Tahapan studi literatur tidak perlu dituliskan karena ini adalah pekerjaan yang harus Anda lakukan selama proses pelaksanaan tugas akhir.
+Berikut merupakan tahapan yang dilaksanakan dalam tugas akhir ini:
 
-\section{Jadwal Pelaksanaan Tugas Akhir}
+\begin{enumerate}
+    \item Menyiapkan lingkungan pengembangan yang diperlukan, termasuk sistem NFS dan perangkat keras yang akan digunakan untuk pelatihan pembelajaran mendalam
+    \item Menyiapkan \textit{dataset} yang akan digunakan, yaitu \textit{dataset} FireRisk dalam format folder PNG
+    \item Mengimplementasikan sistem \textit{tracing} I/O di tingkat NFS untuk merekam aktivitas akses berkas selama pelatihan pembelajaran mendalam
+    \item Mengimplementasikan beban kerja pembelajaran mendalam dengan strategi \textit{shuffling} yang berbeda, yaitu \textit{global shuffling}, \textit{buffered shuffling}, dan \textit{bundle shuffling}, pada proses pelatihan pembelajaran mendalam
+    \item Menjalankan pelatihan pembelajaran mendalam dengan berbagai strategi \textit{shuffling} dan mengumpulkan \textit{dataset trace} I/O yang dihasilkan
+    \item Menganalisis \textit{dataset trace} I/O yang dikumpulkan untuk mengidentifikasi pola akses data, karakteristik beban kerja, dan perbandingan antara strategi \textit{shuffling} yang diterapkan
+\end{enumerate}
 
-Tuliskan rencana kegiatan dan jadwal (dirinci sampai per minggu) mulai dari awal pelaksanaan Tugas Akhir I s.d. sidang tugas akhir berikut milestones dan deliverables yang harus diberikan. Jadwal ini dapat dibantu dengan membuat sebuah tabel timeline.
+\section{Sistematika Pembahasan}
+% TODO: tambahkan sistematika pembahasan
+Subbab ini berisi penjelasan ringkas isi per bab. Penjelasan ditulis dalam satu paragraf per bab buku.
