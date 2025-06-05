@@ -1,0 +1,45 @@
+\chapter{Pendahuluan}
+
+Bab Pendahuluan secara umum yang dijadikan landasan kerja dan arah kerja penulis tugas akhir, berfungsi mengantar pembaca untuk membaca laporan tugas akhir secara keseluruhan.
+
+\section{Latar Belakang}
+\label{sec:latarbelakang}
+
+Dalam dekade terakhir, skala \textit{dataset} pelatihan untuk pembelajaran mendalam telah mengalami pertumbuhan signifikan. Dimulai dari ImageNet-1K yang terdiri atas 1,28 juta gambar JPEG ($\approx$150 GigaByte (GB)) \parencite{AcceleratingDL}, hingga ke \textit{dataset} video besar seperti YouTube-8M milik Google yang mencapai 1,53 TeraByte (TB). Pertumbuhan ini membawa tantangan baru dalam manajemen dan distribusi data, khususnya dalam sistem pelatihan terdistribusi.
+
+Untuk menangani tantangan tersebut, banyak sistem pelatihan skala besar menggunakan \textit{Network File System} (NFS) sebagai lapisan penyimpanan bersama, karena kemudahan dalam manajemen data, pengaturan versi, serta akses oleh banyak simpul komputasi secara simultan. Namun, NFS pada dasarnya dirancang untuk beban kerja akses berkas konvensional, bukan untuk pola akses \textit{high-concurrency}, \textit{bursty}, dan tidak berurutan yang umum dalam beban kerja pembelajaran mendalam \parencite{360survey}.
+
+Studi oleh Pumma dkk.(2019) menunjukkan bahwa operasi \textit{Input/Output} (I/O) dapat mendominasi waktu pelatihan, dengan hingga 90\% dari total waktu \textit{epoch} dihabiskan hanya untuk memuat data. Meskipun kerangka kerja pembelajaran mendalam modern mendukung pemuatan data secara paralel, efisiensinya sering terhambat oleh keterbatasan \textit{file system} yang mendasarinya -- khususnya pada mekanisme \textit{caching} dan \textit{prefetching} tradisional yang tidak cocok dengna pola pengaksesan pembelajaran mendalam yang acak \parencite{BundleShuffle}.
+
+Kondisi ini menyoroti kebutuhan mendesak akan pengembangan sistem \textit{cache} maupun \textit{prefetcher} yang lebih adaptif dan selaras dengan karakteristik beban kerja pembelajaran mendalam. Namun, pengembangan tersebut saat ini terkendala oleh ketiadaan \textit{dataset trace} I/O yang merekam pola akses data riil pada skenario pelatihan pembelajaran mendalam. Tanpa data tersebut, sulit untuk merancang, menguji, dan membandingkan efektivitas berbagai strategi \textit{caching} dan \textit{prefetching}. Oleh karena itu, tugas akhir ini berfokus pada pengembangan \textit{dataset trace} I/O pada NFS, yang dikumpulkan dari skenario pelatihan pembelajaran mendalam menggunakan berbagai strategi \textit{shuffling}. \textit{Dataset} ini harapannya dapat menjadi fondasi bagi penelitian dan pengembangan \textit{cache} maupun \textit{prefetcher} yang lebih cerdas dan efisien di masa depan.
+
+Latar Belakang berisi dasar pemikiran, kebutuhan atau alasan yang menjadi ide dari topik tugas akhir.Tujuan utamanya adalah untuk memberikan informasi secukupnya kepada pembaca agar memahami topik yang akan dibahas.  Saat menuliskan bagian ini, posisikan anda sebagai pembaca – apakah anda tertarik untuk terus membaca?
+
+\section{Rumusan Masalah}
+
+Rumusan Masalah berisi masalah utama yang dibahas dalam tugas akhir. Rumusan masalah yang baik memiliki struktur sebagai berikut:
+
+\begin{enumerate}
+    \item Penjelasan ringkas tentang kondisi/situasi yang ada sekarang terkait dengan topik utama yang dibahas Tugas Akhir.
+    \item Pokok persoalan dari kondisi/situasi yang ada, dapat dilihat dari kelemahan atau kekurangannya. \textbf{Bagian ini merupakan inti dari rumusan masalah}.
+    \item Elaborasi lebih lanjut yang menekankan pentingnya untuk menyelesaikan pokok persoalan tersebut.
+    \item Usulan singkat terkait dengan solusi yang ditawarkan untuk menyelesaikan persoalan.
+\end{enumerate}
+
+Penting untuk diperhatikan bahwa persoalan yang dideskripsikan pada subbab ini akan dipertanggungjawabkan di bab Evaluasi apakah terselesaikan atau tidak.
+
+\section{Tujuan}
+
+Tuliskan tujuan utama dan/atau tujuan detil yang akan dicapai dalam pelaksanaan tugas akhir. Fokuskan pada hasil akhir yang ingin diperoleh setelah tugas akhir diselesaikan, terkait dengan penyelesaian persoalan pada rumusan masalah. Penting untuk diperhatikan bahwa tujuan yang dideskripsikan pada subbab ini akan dipertanggungjawabkan di akhir pelaksanaan tugas akhir apakah tercapai atau tidak.
+
+\section{Batasan Masalah}
+
+Tuliskan batasan-batasan yang diambil dalam pelaksanaan tugas akhir. Batasan ini dapat dihindari (tidak perlu ada) jika topik/judul tugas akhir dibuat cukup spesifik.
+
+\section{Metodologi}
+
+Tuliskan semua tahapan yang akan dilalui selama pelaksanaan tugas akhir. Tahapan ini spesifik untuk menyelesaikan persoalan tugas akhir. Tahapan studi literatur tidak perlu dituliskan karena ini adalah pekerjaan yang harus Anda lakukan selama proses pelaksanaan tugas akhir.
+
+\section{Jadwal Pelaksanaan Tugas Akhir}
+
+Tuliskan rencana kegiatan dan jadwal (dirinci sampai per minggu) mulai dari awal pelaksanaan Tugas Akhir I s.d. sidang tugas akhir berikut milestones dan deliverables yang harus diberikan. Jadwal ini dapat dibantu dengan membuat sebuah tabel timeline.
