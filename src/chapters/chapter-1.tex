@@ -1,7 +1,5 @@
 \chapter{Pendahuluan}
 
-Bab Pendahuluan secara umum yang dijadikan landasan kerja dan arah kerja penulis tugas akhir, berfungsi mengantar pembaca untuk membaca laporan tugas akhir secara keseluruhan.
-
 \section{Latar Belakang}
 \label{sec:latarbelakang}
 
@@ -20,6 +18,7 @@ Rumusan masalah yang hendak dijawab pada tugas akhir ini adalah:
 \begin{enumerate}
     \item Bagaimana format dan struktur \textit{dataset trace} yang dikembangkan?
     \item Bagaimana cara merekam aktivitas I/O di tingkat NFS?
+    \item Bagaimana cara mendapatkan beban kerja pelatihan pembelajaran mendalam yang representatif untuk pengumpulan \textit{dataset trace} I/O?
     \item Apa karakteristik pola akses I/O pada beban kerja pelatihan mendalam dengan berbagai strategi \textit{shuffling}?
 \end{enumerate}
 
@@ -31,6 +30,7 @@ Tujuan dari tugas akhir ini adalah:
     \item Mengembangkan \textit{dataset trace} I/O NFS yang merekam pola akses data pada skenario pelatihan pembelajaran mendalam
     \item Merancang format dan struktur \textit{dataset trace} I/O yang informatif, terstandarisasi, dan dapat digunakan oleh peneliti untuk mengevaluasi dan mengembangan strategi \textit{caching} dan \textit{prefetching}
     \item Mengembangkan dan mengimplementasikan metode \textit{tracing} aktivitas I/O di tingkat NFS
+    \item Membangun beban kerja pelatihan pembelajaran mendalam yang representatif
     \item Menganalisis dan membandingkan karakteristik pola akses I/O yang dihasilkan dari pelatihan pembelajaran mendalam dengan menerapkan berbagai strategi \textit{shuffling}, yaitu \textit{global shuffling}, \textit{buffered shuffling}, dan \textit {bundle shuffling}
 \end{enumerate}
 
