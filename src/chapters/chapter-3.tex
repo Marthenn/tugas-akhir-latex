@@ -44,7 +44,7 @@ Analisis lebih lanjut pada \textit{dataset} yang dikurasi oleh Yang dkk. menunju
 \subsection{Pengembangan \textit{Tracer}}
 \textit{Tracer} untuk tugas akhir ini dikembangkan berbasis \texttt{bpftrace}. Teknologi ini dipilih karena kemampuannya melakukan \textit{tracing} dengan dampak minimal terhadap \textit{throughput} I/O, terutama jika dibandingkan dengan kakas serupa seperti \texttt{strace} \parencite{TracerFile}. \texttt{bpftrace} memanfaatkan \textit{extended Berkeley Packet Filetr} (eBPF) untuk mengeksekusi \textit{script tracing} secara aman di level \textit{kernel} Linux. Mekanisme ini berbasis \textit{event}, bukan \textit{polling}, sehingga jauh lebih efisien.
 
-% TODO: rujuk landasan teori NFS
+TODO: rujuk landasan teori NFS
 Fleksibilitas \texttt{bpftrace} dalam memasang \textit{probe} menjadi kunci untuk menangkap data I/O NFS secara komprehensif. Berdasarkan analisis alur data I/O NFS (subbab 2.X), informasi utama seperti \texttt{timestamp}, \texttt{obj\_id}, \texttt{obj\_name}, dan \texttt{obj\_size} diperoleh dengan memasang \textit{probe} pada \texttt{kprobe vfs\_read}. Namun, karena \texttt{vfs\_read} adalah fungsi pada lapisan VFS, \textit{probe} ini akan terpicu oleh semua operasi baca dari berbagai jenis \textit{file system}, tidak hanya NFS. Hal ini menciptakan tantangan, yaitu bagaimana menyaring data agar hanya aktivitas I/O yang relevan degnan NFS yang tercatat.
 
 Untuk mengatasi tantangan tersebut, diterapkan mekanisme penyaringan dengan menambahkan \textit{probe} kedua pada \texttt{tracepoint nfs4\_open\_file}. \textit{Tracepoint} ini secara spesifik akan terpicu setiap kali sebuah berkas dibuka melalui protokol NFSv4. Saat terpicu, ID dari berkas yang dibuka akan disimpan. Selanjutnya, di dalam \textit{probe} \texttt{kprobe vfs\_read}, ditambahkan logika untuk memeriksa apakah ID berkas yang sedang diakses terdapat pada kumpulan ID berkas NFS yang telah disimpan sebelumnya. Dengan demikian, pencatatan data hanya akan dilakukan jika berkas tersebut sebelumnya telah diidentifikasi sebagai berkas NFS. Pendekatan dua \textit{probe} ini memastikan \textit{trace} yang dihasilkan memiliki akurasi tinggi dan relevan secara ekslusif pada pengaksesan berkas NFS.
@@ -72,11 +72,39 @@ Selain \textit{dataset}, arsitektur model yang digunakan umumnya menjadi kompone
 
 Pendekatan ini divalidasi melalui pengujian awal yang membandingkan skenario iterasi data murni dengan skenario pelatihan penuh. Hasilnya mengonfirmasi bahwa urutan pengaksesan berkas pada kedua skenario adalah identik. Meskipun teramati adanya variasi statistik minor pada waktu antar-pengaksesan, perbedaan temporal ini dianggap berada di luar cakupan tugas akhir. Selain justifikasi fokus penelitian, pendekatan ini juga memberikan keuntungan praktis yang signifikan. Dengan menghilangkan waktu komputasi yang intensif, durasi setiap eksperimen menjadi lebih singkat, sehingga memungkinkan dilakukannya pengujian dengan jumlah konfigurasi yang lebih beragam untuk menghasilkan anlaisis yang lebih komprehensif.
 
+TODO : tambahkan bagian implementasi buffered shuffling dan bundle shuffling + gambarnya | LAMPIRAN X Y Z yang merupakan source codenya
 \subsubsection{Implementasi \textit{Buffered Shuffling}}
-lorem ipsum
+\begin{sloppypar}
+Untuk mendapatkan pola akses I/O dari strategi \textit{buffered shuffling}, diimplementasikan sebuah kelas PyTorch kustom bernama \texttt{HFStyleBufferedShuffleDataset} (implementasi dari kelas ini dapat dilihat pada Lampiran X). Kelas ini mewarisi dari kelas dasar \texttt{torch.utils.data.IterableDataset}, yang memungkinkan dikontrolnya secara penuh logika iterasi dan pengacakan data. Implementasi kustom ini merujuk pada dokumentasi resmi HuggingFace \parencite{HuggingFaceIterableDataset} dan diperlukan karena fungsionalitas bawaan dari kakas HuggingFace tidak mendukung \textit{dataset} yang diakses dari jalur \textit{file system}, seperti pada penyimpanan NFS yang digunakan pada tugas akhir ini. Konsep inti dari strategi yang diadopsi adalah penerapan lapisan lapisan pengacakan untuk mencapai keseimbangan antara efisiensi I/O dan keacakan data.
+\end{sloppypar}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.5\textwidth]{BufferedShuffling.png}
+    \caption{Algoritma \textit{Buffered Shuffling}}
+    \label{fig:BufferedShuffling}
+\end{figure}
+
+Dua lapisan pengacakan tersebut diimplementasikan sesuai dengan Gambar \ref{fig:BufferedShuffling}. Lapisan pertama adalah pengacakan urutan \textit{shard}: pada awal setiap \textit{epoch}, urutan dari seluruh partisi (\textit{shard}) \textit{dataset} diacak terlebih dahulu. Hal ini memastikan bahwa urutan pemrosesan potongan-potongan besar data akan berbeda pada setiap \textit{epoch}. Lapisan kedua adalah pengacakan di dalam \textit{buffer}, yang bekerja dengan mekanisme yang mirip dengan \textit{reservoir sampling}. Untuk setiap \textit{worker}, sebuah \textit{buffer} dengan ukuran \textit{k} diisi dengan \textit{k} data pertama dari sebuah \textit{shard}. Ketika satu data diminta oleh proses pelatihan, sebuah data akan dipilih secara acak dari \textit{k} data di dalam \textit{buffer}. Posisi yang kosong di dalam \textit{buffer} tersebut kemudian langsung diisi oleh data berikutnya dari \textit{shard} yang sama, menjaga ukuran \textit{buffer} tetap konstan. Proses ini memastikan setiap data yang diberikan ke model merupakan sampel acak dari "jendela" data berukuran \textit{k}.
 
 \subsubsection{Implementasi \textit{Bundle Shuffling}}
-lorem ipsum
+Serupa dengan strategi sebelumnya, \textit{bundle shuffling} juga diimplementasikan secara kustom melalui sebuah kelas PyTorch bernama \texttt{BundleShuffleDataset} (implementasi dari kelas ini dapat dilihat pada Lampiran X). Kelas ini mewarisi dari \texttt{torch.utils.data.Dataset} dan merujuk pada konsep dari publikasi aslinya \parencite{BundleShuffle}. Namun, dilakukan penyederhanaan pada tugas akhir ini, alih-alih menyebar logika \textit{shuffling} ke dalam tiga komponen (\texttt{Dataset}, \texttt{DataLoader}, dan \texttt{Sampler}) seperti pada implementasi rujukan, seluruh logika dikonsolidasikan ke dalam kelas \texttt{BundleShuffleDataset} untuk mempermudah implementasi.
+
+TODO: ganti gambar
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.5\textwidth]{BufferedShuffling.png}
+    \caption{Algoritma \textit{Bundle Shuffling}}
+    \label{fig:BundleShuffling}
+\end{figure}
+
+Mekanisme kerja algoritma ini, yang diilustrasikan pada Gambar \ref{fig:BundleShuffling}, diawali dengan tahap pra-pemrosesan. Pada tahap ini, seluruh data dalam \textit{dataset} dikelompokkan menjadi \textit{M} buah bundel, di mana setiap bundel berisi sejumlah data yang berurutan. Setelah bundel terbentuk, proses pengacakan terjadi pada setiap \textit{epoch} dengan dua karakteristik utama:
+\begin{enumerate}
+    \item Pengacakan Internal Bundel: Pada awal setiap \textit{epoch}, urutan data di dalam setiap bundel diacak secara individual. Ini memastikan bahwa model menerima data dalam urutan mikro yang berbeda setiap kalinya.
+    \item Urutan Akses Bundel Bergantian: Yang menjadi karkateristik unik dari strategi ini adalah urutan pemrosesan bundel yang bersifat deterministik dan bergantian. Pada \textit{epoch} ganjil, bundel diakses secara berurutan dari awal hingga akhir (Bundel 1, 2, ..., \textit{M}). Sebaliknya, pada \textit{epoch} genap, urutan akses dibalik, yaitu dari akhir ke awal (Bundel \textit{M}, \textit{M-1}, \textit{M-2}, ..., 1).
+\end{enumerate}
+
+Pola akses bundel bergantian ini menciptakan ketergantungan temporal jangka panjang yang dapat diprediksi. Data-data yang berada di bundel terakhir sebuah \textit{epoch} ganjil akan menjadi data-data pertama yang diakses pada \textit{epoch} genap berikutnya (dan sebaliknya). Karakteristik ini memberikan sinyal prediktif kuat yang berpotensi untuk dieksploitasi oleh strategi \textit{prefetching} yang cerdas.
 
 \subsection{Analisis Karakteristik I/O NFS}
 Tujuan dari tahap analisis ini adalah untuk mengkarakterisasi beban kerja I/O secara kuantitatif dan kualitatif, yang dihasilkan dari proses penjalanan beban kerja pembelajaran mendalam. Dalam analisis ini, istilah "objek" merujuk pada "berkas" individual. Analisis difokuskan pada bagaimana tiga strategi \textit{shuffling} -- yaitu \textit{global shuffling}, \textit{buffered shuffling}, dan \textit{bundle shuffling} -- memengaruhi pola serta lokalitas akses (\textit{temporal} dan \textit{spatial} locality). Terdapat hipotesis bahwa setiap strategi akan menghasilkan profil lokalitas yang unik; misalnya, \textit{global shuffling} cenderung merusak lokalitas, sementara \textit{bundle shuffling} berpotensi mempertahankannya dalam cakupan \textit{bundle}. Hasil analisis ini akan menjadi landasan untuk merancang strategi \textit{caching} dan \textit{prefetching} yang lebih cerdas dan efisien di masa depan.
