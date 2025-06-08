@@ -72,7 +72,7 @@ Selain \textit{dataset}, arsitektur model yang digunakan umumnya menjadi kompone
 
 Pendekatan ini divalidasi melalui pengujian awal yang membandingkan skenario iterasi data murni dengan skenario pelatihan penuh. Hasilnya mengonfirmasi bahwa urutan pengaksesan berkas pada kedua skenario adalah identik. Meskipun teramati adanya variasi statistik minor pada waktu antar-pengaksesan, perbedaan temporal ini dianggap berada di luar cakupan tugas akhir. Selain justifikasi fokus penelitian, pendekatan ini juga memberikan keuntungan praktis yang signifikan. Dengan menghilangkan waktu komputasi yang intensif, durasi setiap eksperimen menjadi lebih singkat, sehingga memungkinkan dilakukannya pengujian dengan jumlah konfigurasi yang lebih beragam untuk menghasilkan anlaisis yang lebih komprehensif.
 
-TODO : tambahkan bagian implementasi buffered shuffling dan bundle shuffling + gambarnya | LAMPIRAN X Y Z yang merupakan source codenya
+TODO : tambahkan bagian LAMPIRAN X Y Z yang merupakan source codenya
 \subsubsection{Implementasi \textit{Buffered Shuffling}}
 \begin{sloppypar}
 Untuk mendapatkan pola akses I/O dari strategi \textit{buffered shuffling}, diimplementasikan sebuah kelas PyTorch kustom bernama \texttt{HFStyleBufferedShuffleDataset} (implementasi dari kelas ini dapat dilihat pada Lampiran X). Kelas ini mewarisi dari kelas dasar \texttt{torch.utils.data.IterableDataset}, yang memungkinkan dikontrolnya secara penuh logika iterasi dan pengacakan data. Implementasi kustom ini merujuk pada dokumentasi resmi HuggingFace \parencite{HuggingFaceIterableDataset} dan diperlukan karena fungsionalitas bawaan dari kakas HuggingFace tidak mendukung \textit{dataset} yang diakses dari jalur \textit{file system}, seperti pada penyimpanan NFS yang digunakan pada tugas akhir ini. Konsep inti dari strategi yang diadopsi adalah penerapan lapisan lapisan pengacakan untuk mencapai keseimbangan antara efisiensi I/O dan keacakan data.
@@ -80,7 +80,7 @@ Untuk mendapatkan pola akses I/O dari strategi \textit{buffered shuffling}, diim
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.5\textwidth]{BufferedShuffling.png}
+    \includegraphics[width=0.7\textwidth]{BufferedShuffling.png}
     \caption{Algoritma \textit{Buffered Shuffling}}
     \label{fig:BufferedShuffling}
 \end{figure}
@@ -90,11 +90,11 @@ Dua lapisan pengacakan tersebut diimplementasikan sesuai dengan Gambar \ref{fig:
 \subsubsection{Implementasi \textit{Bundle Shuffling}}
 Serupa dengan strategi sebelumnya, \textit{bundle shuffling} juga diimplementasikan secara kustom melalui sebuah kelas PyTorch bernama \texttt{BundleShuffleDataset} (implementasi dari kelas ini dapat dilihat pada Lampiran X). Kelas ini mewarisi dari \texttt{torch.utils.data.Dataset} dan merujuk pada konsep dari publikasi aslinya \parencite{BundleShuffle}. Namun, dilakukan penyederhanaan pada tugas akhir ini, alih-alih menyebar logika \textit{shuffling} ke dalam tiga komponen (\texttt{Dataset}, \texttt{DataLoader}, dan \texttt{Sampler}) seperti pada implementasi rujukan, seluruh logika dikonsolidasikan ke dalam kelas \texttt{BundleShuffleDataset} untuk mempermudah implementasi.
 
-TODO: ganti gambar
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.5\textwidth]{BufferedShuffling.png}
+    \includegraphics[width=1.0\textwidth]{BundleShuffle.png}
     \caption{Algoritma \textit{Bundle Shuffling}}
+    \parencite{BundleShuffle}
     \label{fig:BundleShuffling}
 \end{figure}
 
