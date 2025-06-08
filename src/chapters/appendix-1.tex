@@ -1,3 +1,33 @@
-\chapter{Contoh Judul Lampiran}
-\section{Contoh Judul Anak Lampiran}
-Here is my appendix content...
+\chapter{Skrip bpftrace yang Digunakan}
+\label{sec:skripbpf}
+
+\vspace{1.5pt}
+
+\lstset{
+  frame=single,       % Puts a box around the code
+  breaklines=true,    % Enables automatic line wrapping
+  breakatwhitespace=false, % Prevents breaks only at spaces
+  basicstyle=\ttfamily\small % Uses monospaced font for clarity
+}
+
+\begin{lstlisting}
+tracepoint:nfs4:nfs4_open_file {
+ @start[tid] = nsecs;
+ @fileinfo[tid] = str(args->name);
+ @fileid[tid] = args->fileid;
+}
+
+kprobe:vfs_read {
+ $ts = nsecs;
+ $latency = $ts - @start[tid];
+ $filp = (struct file *)arg0;
+ $f_path = $filp->f_path;
+ $dentry = $f_path.dentry;
+ $inode = $dentry->d_inode;
+ $size = $inode->i_size;
+ printf("%llu,%llu,%s,%llu,%llu\n", $ts, @fileid[tid], @fileinfo[tid], $size, $latency);
+ delete(@start[tid]);
+ delete(@fileinfo[tid]);
+ delete(@fileid[tid]);
+}
+\end{lstlisting}

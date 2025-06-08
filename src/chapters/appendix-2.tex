@@ -1,2 +1,153 @@
-\chapter{Contoh Judul Lampiran}
-Here is my appendix content...
+\chapter{Implementasi Kelas Kustom \textit{Shuffling}}
+\label{sec:implementasishuffler}
+
+\lstset{
+  frame=single,
+  breaklines=true,
+  basicstyle=\ttfamily\small,
+  tabsize=4
+}
+
+\section{Implementasi \textit{Buffered Shuffling}}
+\vspace{1.5pt}
+\begin{lstlisting}
+class HFStyleBufferedShuffleDataset(IterableDataset):
+    def __init__(self, root_dir, transform=None, buffer_size=1024, shuffle=True, seed=None):
+        super().__init__()
+        self.root_dir = root_dir
+        self.transform = transform
+        self.buffer_size = buffer_size
+        self.shuffle = shuffle
+        self.base_seed = seed
+        self.epoch = 0
+        self._samples = []
+        self._class_to_idx = {}
+        self._prepare_samples()
+
+    def _prepare_samples(self):
+        if not os.path.isdir(self.root_dir):
+            raise FileNotFoundError(f"Root directory not found: {self.root_dir}")
+        print(f"Scanning '{os.path.basename(self.root_dir)}' to build dataset map...")
+        class_names = sorted([d.name for d in os.scandir(self.root_dir) if d.is_dir()])
+        self._class_to_idx = {name: i for i, name in enumerate(class_names)}
+        for class_name, class_idx in tqdm(self._class_to_idx.items(), desc="Discovering files"):
+            class_dir = os.path.join(self.root_dir, class_name)
+            for fname in os.listdir(class_dir):
+                if fname.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif")):
+                    self._samples.append((os.path.join(class_dir, fname), class_idx))
+        print(f"Scan complete. Found {len(self._samples)} images.")
+
+    def __iter__(self):
+        rng = random.Random()
+        if self.base_seed is not None:
+            rng.seed(self.base_seed + self.epoch)
+        epoch_samples = list(self._samples)
+        if self.shuffle:
+            rng.shuffle(epoch_samples)
+
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is not None:
+            num_workers, worker_id = worker_info.num_workers, worker_info.id
+            k, m = divmod(len(epoch_samples), num_workers)
+            epoch_samples = epoch_samples[worker_id * k + min(worker_id, m):(worker_id + 1) * k + min(worker_id + 1, m)]
+        
+        return self._data_stream_generator(iter(epoch_samples), rng)
+
+    def _data_stream_generator(self, sample_iterator, rng):
+        reservoir_buffer = []
+        try:
+            for _ in range(self.buffer_size):
+                reservoir_buffer.append(next(sample_iterator))
+        except StopIteration:
+            pass
+        if self.shuffle:
+            rng.shuffle(reservoir_buffer)
+        
+        for new_sample in sample_iterator:
+            yield_sample = reservoir_buffer.pop(0) if not self.shuffle else reservoir_buffer.pop(rng.randint(0, len(reservoir_buffer) - 1))
+            reservoir_buffer.append(new_sample)
+            try:
+                filepath, label = yield_sample
+                img = Image.open(filepath).convert("RGB")
+                yield self.transform(img) if self.transform else img, label
+            except Exception as e:
+                print(f"Error loading {filepath}: {e}. Skipping.")
+
+        if self.shuffle:
+            rng.shuffle(reservoir_buffer)
+        for remaining_sample in reservoir_buffer:
+            try:
+                filepath, label = remaining_sample
+                img = Image.open(filepath).convert("RGB")
+                yield self.transform(img) if self.transform else img, label
+            except Exception as e:
+                print(f"Error loading {filepath}: {e}. Skipping.")
+\end{lstlisting}
+
+
+\section{Implementasi \textit{Bundle Shuffling}}
+\vspace{1.5pt}
+\begin{lstlisting}
+class BundleShuffleDataset(Dataset):
+    def __init__(self, root_dir, transform=None, bundle_size=0, shuffle=True, seed=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.bundle_size = bundle_size
+        self.shuffle_internal = shuffle
+        self.base_seed = seed
+        self.current_epoch = -1
+        self._samples = []
+        self._class_to_idx = {}
+        self.base_bundles = None
+        self.prepared_epoch_data = []
+        self._prepare_samples_and_bundles()
+
+    def _prepare_samples_and_bundles(self):
+        if not os.path.isdir(self.root_dir):
+            raise FileNotFoundError(f"Root directory not found: {self.root_dir}")
+        class_names = sorted([d.name for d in os.scandir(self.root_dir) if d.is_dir()])
+        self._class_to_idx = {name: i for i, name in enumerate(class_names)}
+        valid_samples = []
+        for class_name, class_idx in self._class_to_idx.items():
+            class_dir = os.path.join(self.root_dir, class_name)
+            for fname in os.listdir(class_dir):
+                if fname.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif")):
+                    fpath = os.path.join(class_dir, fname)
+                    if os.path.isfile(fpath) and os.path.getsize(fpath) > 0:
+                        valid_samples.append((fpath, class_idx))
+        self._samples = valid_samples
+        self.base_bundles = [self._samples[i:i + self.bundle_size] for i in range(0, len(self._samples), self.bundle_size)] if self._samples else None
+
+    def set_epoch(self, epoch: int):
+        if self.current_epoch == epoch and self.prepared_epoch_data:
+            return
+        self.current_epoch = epoch
+        rng = random.Random()
+        if self.base_seed is not None:
+            rng.seed(self.base_seed + self.current_epoch)
+        if self.shuffle_internal:
+            if self.base_bundles:
+                intra_shuffled_bundles = [list(bundle) for bundle in self.base_bundles]
+                for bundle in intra_shuffled_bundles:
+                    rng.shuffle(bundle)
+                bundles_in_epoch_read_order = intra_shuffled_bundles if self.current_epoch % 2 != 0 else list(reversed(intra_shuffled_bundles))
+                self.prepared_epoch_data = [sample for bundle in bundles_in_epoch_read_order for sample in bundle]
+            else:
+                temp_samples = list(self._samples)
+                rng.shuffle(temp_samples)
+                self.prepared_epoch_data = temp_samples
+        else:
+            self.prepared_epoch_data = list(self._samples)
+
+    def __len__(self):
+        return len(self._samples)
+
+    def __getitem__(self, index: int):
+        if self.current_epoch < 0 or not self.prepared_epoch_data:
+            raise RuntimeError("Dataset epoch not set or data not prepared.")
+        if not (0 <= index < len(self.prepared_epoch_data)):
+            raise IndexError(f"Index {index} out of bounds.")
+        filepath, label = self.prepared_epoch_data[index]
+        img = Image.open(filepath).convert("RGB")
+        return self.transform(img) if self.transform else img, label
+\end{lstlisting}
