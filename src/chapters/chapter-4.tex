@@ -73,7 +73,7 @@ Pengembangan \textit{dataset trace} I/O NFS merupakan tujuan utama dari tugas ak
 Proses perekaman \textit{trace} dilakukan dengan menjalankan skrip \texttt{bpftrace} dan beban kerja pembelajaran mendalam secara sinkron untuk setiap konfigurasi eksperimen. Keluaran standar dari \texttt{bpftrace}, yang berisi data \textit{trace} baris per baris, dialihkan dan disimpan langsung ke dalam sebuah berkas dengan format \texttt{.csv} menggunakan utilitas \texttt{tee} pada terminal Linux. Pendekatan ini memastikan perekaman data terjadi secara waktu-nyata dengan \textit{overhead} minimal pada proses yang sedang diamati.
 
 Setelah proses perekaman untuk setiap konfigurasi selesai, dilakukan tahap verifikasi data. Proses ini krusial untuk memastikan bahwa \textit{trace} yang dihasilkan bebas dari anomali, lengkap, dan secara akurat merefleksikan aktivitas I/O yang terjadi. Proses validasi dilakukan dengan beberapa pendekatan berikut:
-\begin{enumerate}
+\begin{enumerate}[itemsep=0pt, parsep=0pt]
     \item Konsistensi Waktu: Memastikan nilai pada kolom \texttt{timestamp} selalu terurut menaik.
     \item Konsistensi Ukuran: Memastikan setiap \texttt{obj\_id} yang sama selalu memiliki nilai \texttt{obj\_size} yang identik, karena operasi hanya bersifat baca.
     \item Konsistensi ID: Memastikan setiap \texttt{obj\_id} secara konsisten merujuk pada satu \texttt{obj\_name} yang sama. Untuk tujuan ini, nama berkas juga direkam dalam \textit{trace} mentah namun kemudian dihapus dari \textit{dataset} final untuk menjaga format tetap ringkas.
